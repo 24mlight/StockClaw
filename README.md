@@ -17,13 +17,6 @@
 </p>
 
 <p align="center">
-  <img alt="GitHub stars" src="https://img.shields.io/github/stars/24mlight/stock-claw?style=flat-square">
-  <img alt="GitHub forks" src="https://img.shields.io/github/forks/24mlight/stock-claw?style=flat-square">
-  <img alt="GitHub issues" src="https://img.shields.io/github/issues/24mlight/stock-claw?style=flat-square">
-  <img alt="Last commit" src="https://img.shields.io/github/last-commit/24mlight/stock-claw?style=flat-square">
-</p>
-
-<p align="center">
   <a href="#quick-start">Quick Start</a> ·
   <a href="#what-it-does">What It Does</a> ·
   <a href="#architecture">Architecture</a> ·
