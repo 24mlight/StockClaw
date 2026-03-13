@@ -145,7 +145,6 @@ This is where the multi-agent structure matters most: the root can combine valua
 
 ```bash
 git clone https://github.com/24mlight/StockClaw.git
-cd stock-claw
 npm install
 npm start
 ```
