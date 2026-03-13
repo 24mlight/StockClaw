@@ -3,6 +3,8 @@ import { createServer } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { WebApp } from "../src/server/app.js";
+import { renderControlPanelClientScript } from "../src/server/ui/client-script.js";
+import { CONTROL_PANEL_STYLES } from "../src/server/ui/styles.js";
 import { renderControlPanelHtml } from "../src/server/ui.js";
 
 describe("web control panel", () => {
@@ -12,6 +14,17 @@ describe("web control panel", () => {
     expect(html).toContain("Session");
     expect(html).toContain("Portfolio");
     expect(html).toContain("/api/sessions");
+  });
+
+  it("includes markdown rendering support in the client script", () => {
+    const script = renderControlPanelClientScript();
+    expect(script).toContain("function renderMarkdown(markdown)");
+    expect(script).toContain('class="markdown"');
+  });
+
+  it("includes markdown styles for rendered content", () => {
+    expect(CONTROL_PANEL_STYLES).toContain(".markdown {");
+    expect(CONTROL_PANEL_STYLES).toContain(".code-block {");
   });
 });
 

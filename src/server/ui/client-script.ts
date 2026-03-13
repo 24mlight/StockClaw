@@ -19,6 +19,7 @@ export function renderControlPanelClientScript(): string {
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;");
+      const escapeAttribute = (value) => escapeHtml(value).replaceAll("'", "&#39;");
 
       const setStatus = (id, message, isError = false) => {
         const el = byId(id);
@@ -109,15 +110,14 @@ export function renderControlPanelClientScript(): string {
 
         for (const entry of transcript) {
           if (entry.role === "user") {
-            rows.push('<div class="message-row user"><div class="bubble-user"><pre>' + escapeHtml(entry.content || "") + '</pre></div></div>');
+            rows.push('<div class="message-row user"><div class="bubble-user">' + renderMarkdown(entry.content || "") + '</div></div>');
             continue;
           }
 
           const blocks = normalizeBlocks(entry.blocks || []);
           rows.push(
-            '<div class="message-row assistant"><div class="assistant-wrap"><div class="assistant-icon">AI</div><div class="assistant-body"><pre>' +
-              escapeHtml(entry.content || "") +
-              '</pre>' +
+            '<div class="message-row assistant"><div class="assistant-wrap"><div class="assistant-icon">AI</div><div class="assistant-body">' +
+              renderMarkdown(entry.content || "") +
               renderBlocks(blocks) +
               "</div></div></div>",
           );
@@ -132,9 +132,8 @@ export function renderControlPanelClientScript(): string {
         if (latestResult?.response?.message && !transcriptAlreadyIncludesLatest) {
           const resultBlocks = normalizeBlocks(latestResult?.response?.blocks || []);
           rows.push(
-            '<div class="message-row assistant"><div class="assistant-wrap"><div class="assistant-icon">AI</div><div class="assistant-body"><pre>' +
-              escapeHtml(latestResult.response.message) +
-              "</pre>" +
+            '<div class="message-row assistant"><div class="assistant-wrap"><div class="assistant-icon">AI</div><div class="assistant-body">' +
+              renderMarkdown(latestResult.response.message) +
               renderBlocks(resultBlocks) +
               "</div></div></div>",
           );
@@ -204,9 +203,85 @@ export function renderControlPanelClientScript(): string {
         }
         return '<div class="blocks">' + blocks.map((block) => {
           const title = typeof block.title === "string" ? '<strong>' + escapeHtml(block.title) + "</strong>" : "";
-          const content = typeof block.content === "string" ? '<pre>' + escapeHtml(block.content) + "</pre>" : '<pre>' + escapeHtml(JSON.stringify(block.content ?? "", null, 2)) + "</pre>";
+          const content = typeof block.content === "string"
+            ? renderMarkdown(block.content)
+            : '<pre>' + escapeHtml(JSON.stringify(block.content ?? "", null, 2)) + "</pre>";
           return '<div class="block">' + title + content + "</div>";
         }).join("") + "</div>";
+      }
+
+      function renderMarkdown(markdown) {
+        const source = String(markdown || "");
+        if (!source.trim()) {
+          return "";
+        }
+
+        const tick = String.fromCharCode(96);
+        const tripleTick = tick + tick + tick;
+        const codeBlocks = [];
+        const withoutFences = source.replace(new RegExp(tripleTick + "([^\\\\n]*)\\\\n([\\\\s\\\\S]*?)" + tripleTick, "g"), (_, lang, code) => {
+          const index = codeBlocks.push({
+            lang: String(lang || "").trim(),
+            code: String(code || "").replace(/\\s+$/, ""),
+          }) - 1;
+          return "\\n@@CODEBLOCK_" + index + "@@\\n";
+        });
+
+        const blocks = withoutFences
+          .replace(/\\r/g, "")
+          .split(/\\n{2,}/)
+          .map((part) => part.trim())
+          .filter(Boolean);
+
+        const html = blocks.map((block) => renderMarkdownBlock(block)).join("");
+        return '<div class="markdown">' + html.replace(/@@CODEBLOCK_(\\d+)@@/g, (_, rawIndex) => {
+          const item = codeBlocks[Number(rawIndex)];
+          if (!item) {
+            return "";
+          }
+          const label = item.lang ? '<div class="code-lang">' + escapeHtml(item.lang) + "</div>" : "";
+          return '<div class="code-block">' + label + "<pre><code>" + escapeHtml(item.code) + "</code></pre></div>";
+        }) + "</div>";
+      }
+
+      function renderMarkdownBlock(block) {
+        if (/^@@CODEBLOCK_\\d+@@$/.test(block)) {
+          return block;
+        }
+        if (/^---+$/.test(block) || /^\\*\\*\\*+$/.test(block)) {
+          return "<hr>";
+        }
+
+        const lines = block.split("\\n");
+        if (lines.every((line) => /^>\\s?/.test(line))) {
+          const content = lines.map((line) => line.replace(/^>\\s?/, "")).join(" ");
+          return "<blockquote>" + renderInlineMarkdown(content) + "</blockquote>";
+        }
+        if (lines.every((line) => /^\\d+\\.\\s+/.test(line))) {
+          return "<ol>" + lines.map((line) => "<li>" + renderInlineMarkdown(line.replace(/^\\d+\\.\\s+/, "")) + "</li>").join("") + "</ol>";
+        }
+        if (lines.every((line) => /^[-*]\\s+/.test(line))) {
+          return "<ul>" + lines.map((line) => "<li>" + renderInlineMarkdown(line.replace(/^[-*]\\s+/, "")) + "</li>").join("") + "</ul>";
+        }
+
+        const heading = block.match(/^(#{1,6})\\s+(.+)$/);
+        if (heading) {
+          const level = heading[1].length;
+          return "<h" + level + ">" + renderInlineMarkdown(heading[2]) + "</h" + level + ">";
+        }
+
+        return "<p>" + lines.map((line) => renderInlineMarkdown(line)).join("<br>") + "</p>";
+      }
+
+      function renderInlineMarkdown(text) {
+        let html = escapeHtml(String(text || ""));
+        const tick = String.fromCharCode(96);
+        html = html.replace(new RegExp(tick + "([^" + tick + "]+)" + tick, "g"), "<code>$1</code>");
+        html = html.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)/g, (_, label, url) => '<a href="' + escapeAttribute(url) + '" target="_blank" rel="noreferrer noopener">' + label + "</a>");
+        html = html.replace(/\\*\\*([^*]+)\\*\\*/g, "<strong>$1</strong>");
+        html = html.replace(/(^|[^\\*])\\*([^*]+)\\*(?!\\*)/g, "$1<em>$2</em>");
+        html = html.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+        return html;
       }
 
       function renderSession(session) {

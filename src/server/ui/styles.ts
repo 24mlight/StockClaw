@@ -171,6 +171,119 @@ export const CONTROL_PANEL_STYLES = `
         line-height: 1.6;
       }
 
+      .markdown {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .markdown > :first-child {
+        margin-top: 0;
+      }
+
+      .markdown > :last-child {
+        margin-bottom: 0;
+      }
+
+      .markdown p,
+      .markdown ul,
+      .markdown ol,
+      .markdown blockquote {
+        margin: 0;
+      }
+
+      .markdown h1,
+      .markdown h2,
+      .markdown h3,
+      .markdown h4,
+      .markdown h5,
+      .markdown h6 {
+        margin: 0;
+        line-height: 1.35;
+        font-weight: 800;
+      }
+
+      .markdown h1 {
+        font-size: 28px;
+      }
+
+      .markdown h2 {
+        font-size: 24px;
+      }
+
+      .markdown h3 {
+        font-size: 20px;
+      }
+
+      .markdown h4,
+      .markdown h5,
+      .markdown h6 {
+        font-size: 16px;
+      }
+
+      .markdown a {
+        color: #93c5fd;
+        text-decoration: none;
+      }
+
+      .markdown a:hover {
+        text-decoration: underline;
+      }
+
+      .markdown ul,
+      .markdown ol {
+        padding-left: 22px;
+      }
+
+      .markdown li + li {
+        margin-top: 4px;
+      }
+
+      .markdown blockquote {
+        padding: 10px 14px;
+        border-left: 3px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: #d6d6d6;
+        border-radius: 0 12px 12px 0;
+      }
+
+      .markdown hr {
+        width: 100%;
+        height: 1px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .markdown code {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        font-size: 12px;
+      }
+
+      .code-block {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.24);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .code-lang {
+        padding: 8px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .code-block pre {
+        margin: 0;
+        padding: 14px;
+        overflow-x: auto;
+      }
+
       .thoughts {
         display: flex;
         flex-direction: column;

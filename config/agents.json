@@ -6,9 +6,9 @@
     "allowedTools": ["web_search", "web_fetch", "exec_command"],
     "writeCapabilities": ["memory"],
     "spawnCapabilities": [
-      "value_analyst",
       "technical_analyst",
       "news_sentiment_analyst",
+      "value_analyst",
       "risk_manager",
       "portfolio_agent",
       "trade_executor",
