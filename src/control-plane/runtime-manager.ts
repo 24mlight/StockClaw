@@ -20,6 +20,7 @@ export class RuntimeManager {
   private readonly buildRuntimeFn: () => Promise<ApplicationRuntime>;
   private reloadTimer: NodeJS.Timeout | null = null;
   private pendingReason = "";
+  private pendingFiles: string[] = [];
   private closed = false;
   private closePromise: Promise<void> | null = null;
   private startedAt: string | null = null;
@@ -43,14 +44,14 @@ export class RuntimeManager {
     this.buildRuntimeFn = options.buildRuntime ?? (() => this.buildRuntime());
     this.watcher = new RuntimeWatcher({
       env,
-      onConfigChange: async (target) => {
-        this.scheduleReload(`config:${target}`);
+      onConfigChange: async (target, changedPath) => {
+        this.scheduleReload(`config:${target}`, changedPath);
       },
-      onSkillsChange: async () => {
-        this.scheduleReload("skills:watch");
+      onSkillsChange: async (changedPath) => {
+        this.scheduleReload("skills:watch", changedPath);
       },
-      onPromptsChange: async () => {
-        this.scheduleReload("prompts:watch");
+      onPromptsChange: async (changedPath) => {
+        this.scheduleReload("prompts:watch", changedPath);
       },
     });
   }
@@ -135,7 +136,7 @@ export class RuntimeManager {
     };
   }
 
-  async reload(reason: string): Promise<void> {
+  async reload(reason: string, changedFiles: string[] = []): Promise<void> {
     if (this.closed) {
       return;
     }
@@ -158,13 +159,19 @@ export class RuntimeManager {
         this.lastReloadReason = reason;
         this.lastError = null;
         this.reloadCount += 1;
-        console.log(`stock-claw runtime reloaded (${reason})`);
+        const fileSummary = formatChangedFiles(changedFiles);
+        console.log(
+          fileSummary
+            ? `🔄 stock-claw runtime reloaded (${reason}) files=${fileSummary}`
+            : `🔄 stock-claw runtime reloaded (${reason})`,
+        );
         await this._runtimeLogger.info({
           component: "runtime",
           type: "runtime_reloaded",
           data: {
             reason,
             reloadCount: this.reloadCount,
+            files: changedFiles.length > 0 ? changedFiles : undefined,
           },
         });
       } catch (error) {
@@ -185,19 +192,34 @@ export class RuntimeManager {
     await this.reloadQueue;
   }
 
-  scheduleReload(reason: string): void {
+  scheduleReload(reason: string, changedPath?: string): void {
     if (this.closed) {
       return;
     }
     this.pendingReason = this.pendingReason ? `${this.pendingReason},${reason}` : reason;
+    if (changedPath?.trim()) {
+      const normalizedPath = changedPath.trim();
+      this.pendingFiles.push(normalizedPath);
+      console.log(`👀 stock-claw runtime watch event (${reason}) file=${normalizedPath}`);
+      void this._runtimeLogger.info({
+        component: "runtime",
+        type: "runtime_watch_event",
+        data: {
+          reason,
+          file: normalizedPath,
+        },
+      });
+    }
     if (this.reloadTimer) {
       clearTimeout(this.reloadTimer);
     }
     this.reloadTimer = setTimeout(() => {
       const summary = this.pendingReason;
+      const files = [...this.pendingFiles];
       this.pendingReason = "";
+      this.pendingFiles = [];
       this.reloadTimer = null;
-      void this.reload(summary).catch((error) => {
+      void this.reload(summary, files).catch((error) => {
         console.warn(`stock-claw runtime reload failed (${summary}): ${String(error)}`);
       });
     }, 300);
@@ -236,6 +258,7 @@ export class RuntimeManager {
       clearTimeout(this.reloadTimer);
       this.reloadTimer = null;
       this.pendingReason = "";
+      this.pendingFiles = [];
     }
     await this.watcher.close();
     await this.reloadQueue.catch(() => {});
@@ -272,4 +295,11 @@ export class RuntimeManager {
   get runtimeLogger(): RuntimeEventLogger {
     return this._runtimeLogger;
   }
+}
+
+function formatChangedFiles(files: string[]): string {
+  if (files.length === 0) {
+    return "";
+  }
+  return files.join(", ");
 }

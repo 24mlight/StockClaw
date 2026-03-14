@@ -5,9 +5,9 @@ import path from "node:path";
 
 interface RuntimeWatcherParams {
   env: NodeJS.ProcessEnv;
-  onConfigChange: (target: "llm" | "mcp") => Promise<void>;
-  onSkillsChange: () => Promise<void>;
-  onPromptsChange: () => Promise<void>;
+  onConfigChange: (target: "llm" | "mcp", changedPath: string) => Promise<void>;
+  onSkillsChange: (changedPath: string) => Promise<void>;
+  onPromptsChange: (changedPath: string) => Promise<void>;
 }
 
 export class RuntimeWatcher {
@@ -36,20 +36,23 @@ export class RuntimeWatcher {
         if (!name) {
           return;
         }
+        const changedPath = path.resolve(configDir, name);
         if (name.endsWith("mcporter.json")) {
-          this.debounceConfigReload("mcp");
+          this.debounceConfigReload("mcp", changedPath);
           return;
         }
         if (name.endsWith("llm.local.toml") || name.endsWith("llm.local.json")) {
-          this.debounceConfigReload("llm");
+          this.debounceConfigReload("llm", changedPath);
         }
       }),
     );
 
     for (const skillDir of skillDirs) {
       this.watchers.push(
-        watch(skillDir, { recursive: true }, () => {
-          this.debounceSkillsReload();
+        watch(skillDir, { recursive: true }, (_eventType, filename) => {
+          const name = filename?.toString().replace(/\\/g, "/") || "";
+          const changedPath = name ? path.resolve(skillDir, name) : skillDir;
+          this.debounceSkillsReload(changedPath);
         }),
       );
     }
@@ -61,7 +64,7 @@ export class RuntimeWatcher {
           if (!name || !name.endsWith(".md")) {
             return;
           }
-          this.debouncePromptsReload();
+          this.debouncePromptsReload(path.resolve(promptDir, name));
         }),
       );
     }
@@ -85,33 +88,33 @@ export class RuntimeWatcher {
     }
   }
 
-  private debounceConfigReload(target: "llm" | "mcp"): void {
+  private debounceConfigReload(target: "llm" | "mcp", changedPath: string): void {
     if (this.configTimer) {
       clearTimeout(this.configTimer);
     }
     this.configTimer = setTimeout(() => {
       this.configTimer = null;
-      void this.params.onConfigChange(target);
+      void this.params.onConfigChange(target, changedPath);
     }, 300);
   }
 
-  private debounceSkillsReload(): void {
+  private debounceSkillsReload(changedPath: string): void {
     if (this.skillsTimer) {
       clearTimeout(this.skillsTimer);
     }
     this.skillsTimer = setTimeout(() => {
       this.skillsTimer = null;
-      void this.params.onSkillsChange();
+      void this.params.onSkillsChange(changedPath);
     }, 300);
   }
 
-  private debouncePromptsReload(): void {
+  private debouncePromptsReload(changedPath: string): void {
     if (this.promptsTimer) {
       clearTimeout(this.promptsTimer);
     }
     this.promptsTimer = setTimeout(() => {
       this.promptsTimer = null;
-      void this.params.onPromptsChange();
+      void this.params.onPromptsChange(changedPath);
     }, 300);
   }
 }

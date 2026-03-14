@@ -55,7 +55,8 @@ export class RuntimeEventLogger {
 }
 
 function formatConsoleLine(record: RuntimeEventRecord): string {
-  const parts = [`[${record.component}]`, record.type];
+  const emoji = resolveRuntimeEmoji(record);
+  const parts = [emoji ? `${emoji} [${record.component}]` : `[${record.component}]`, record.type];
   if (record.profileId) {
     parts.push(`profile=${record.profileId}`);
   }
@@ -74,6 +75,40 @@ function formatConsoleLine(record: RuntimeEventRecord): string {
     }
   }
   return parts.join(" ");
+}
+
+function resolveRuntimeEmoji(record: RuntimeEventRecord): string {
+  if (record.level === "error") {
+    return "❌";
+  }
+  if (record.level === "warn") {
+    return "⚠️";
+  }
+  if (record.component === "runtime") {
+    if (record.type === "runtime_reloaded" || record.type === "manager_started") {
+      return "🔄";
+    }
+    if (record.type === "runtime_watch_event") {
+      return "👀";
+    }
+    return "⚙️";
+  }
+  if (record.component === "root") {
+    return "🧠";
+  }
+  if (record.component === "agent") {
+    if (record.type === "tool_selected") {
+      return "🛠️";
+    }
+    return "🤖";
+  }
+  if (record.component === "tool") {
+    return "🛠️";
+  }
+  if (record.component === "daemon") {
+    return "🖥️";
+  }
+  return "ℹ️";
 }
 
 function shorten(value: string, limit = 96): string {

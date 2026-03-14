@@ -88,8 +88,8 @@ describe("buildStatusMessage", () => {
       },
     });
 
-    expect(message).toContain("Live Session Summary:");
-    expect(message).toContain("Recent Durable Memory Artifacts:");
+    expect(message).toContain("📝 Live Session Summary:");
+    expect(message).toContain("🗂️ Recent Durable Memory Artifacts:");
     expect(message).toContain("TOOLS.md [bootstrap memory]");
     expect(message).toContain("2026-03-12.md [daily flush]");
   });
@@ -149,7 +149,7 @@ describe("buildStatusMessage", () => {
       runtime: null,
     });
 
-    expect(message).toContain("Live Session Summary:");
+    expect(message).toContain("📝 Live Session Summary:");
     expect(message).toContain("## Durable User Preferences");
     expect(message).not.toContain("Live Session Summary\nLive Session Summary");
     expect(message).not.toContain("# Live Session Summary");
@@ -237,7 +237,7 @@ describe("buildStatusMessage", () => {
       runtime: null,
     });
 
-    expect(message).toContain("Recent Backtest Jobs:");
+    expect(message).toContain("🧪 Recent Backtest Jobs:");
     expect(message).toContain("job-new");
     expect(message).not.toContain("job-old");
     expect(message).toContain("Full Backtest History: /backtests");
@@ -322,8 +322,8 @@ describe("buildStatusMessage", () => {
       },
     });
 
-    expect(message).toContain("Cron Jobs:");
-    expect(message).toContain("Latest Cron Job:");
+    expect(message).toContain("⏰ Cron Jobs:");
+    expect(message).toContain("🕒 Latest Cron Job:");
     expect(message).toContain("hourly rebalance (cron-new)");
     expect(message).toContain("Full Cron History: /cron");
   });
