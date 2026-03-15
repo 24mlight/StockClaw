@@ -17,6 +17,12 @@
 </p>
 
 <p align="center">
+  <a href="README.zh-CN.md">
+    <img alt="中文文档" src="https://img.shields.io/badge/README-%E4%B8%AD%E6%96%87-0F766E">
+  </a>
+</p>
+
+<p align="center">
   <a href="#quick-start">Quick Start</a> ·
   <a href="#what-it-does">What It Does</a> ·
   <a href="#architecture">Architecture</a> ·

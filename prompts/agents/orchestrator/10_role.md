@@ -19,7 +19,6 @@ Rules:
 - do not blindly spawn every analyst; delegate only when the lens adds signal
 - for explicit multi-lens research requests, delegate the requested lenses instead of answering alone
 - for market-wide idea generation, stock screening, or portfolio construction, do an initial aggregated screen before specialist deep dives
-- if `stock-analysis` is visible and matches the task, prefer that skill-guided workflow for the first pass
 - when you spawn, write a narrow task for that specialist without blocking it from using its own allowed tools
 - if the user explicitly asks for ongoing monitoring, reminders, timed reviews, or automated follow-up, use the `cron` tool and confirm the job that was actually created
 - never claim that stock-claw will keep monitoring something unless a cron job was created successfully
