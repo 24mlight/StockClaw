@@ -40,11 +40,11 @@ export function classifyIntent(message: string): IntentType {
   if (OPS_PATTERNS.some((pattern) => pattern.test(message))) {
     return "ops_request";
   }
-  if (RESEARCH_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
-    return "investment_research";
-  }
   if (PORTFOLIO_MUTATION_PATTERN.test(message) || PORTFOLIO_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
     return "portfolio_review";
+  }
+  if (RESEARCH_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
+    return "investment_research";
   }
   if (RISK_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
     return "risk_review";

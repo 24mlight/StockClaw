@@ -2,7 +2,7 @@
   {
     "id": "orchestrator",
     "description": "Route user intent, synthesize specialist output, and decide next actions.",
-    "allowedToolGroups": ["portfolio_read", "sessions", "research", "automation", "memory_write", "backtest", "control_plane"],
+    "allowedToolGroups": ["portfolio_read", "review_artifacts", "sessions", "research", "automation", "memory_write", "backtest", "control_plane"],
     "allowedTools": ["web_search", "web_fetch", "exec_command"],
     "writeCapabilities": ["memory"],
     "spawnCapabilities": [

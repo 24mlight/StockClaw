@@ -35,6 +35,9 @@ function createRegistry() {
         appendDocument,
         writeDocument: async () => undefined,
       } as never,
+      reviews: {
+        savePreopenDecision: async () => "review-artifacts/preopen/2026-03-17.json",
+      } as never,
       executor: {
         execute: async () => ({}),
       } as never,
@@ -144,6 +147,55 @@ describe("memory_write_markdown", () => {
         "tool-2",
         {
           path: "portfolio/summary.md",
+          content: "Do not write here.",
+        },
+        undefined,
+        undefined,
+        undefined as never,
+      ),
+    ).rejects.toThrow(/only allows/i);
+  });
+});
+
+describe("memory_write_trading_note", () => {
+  it("appends concise notes to approved trading memory paths", async () => {
+    const { registry, appendDocument } = createRegistry();
+    const tool = registry.createTools(["memory_write_trading_note"], {
+      profileId: "orchestrator",
+      sessionKey: "root",
+      rootUserMessage: "记录我的交易体系禁做条件。",
+    })[0];
+
+    const result = await tool.execute(
+      "tool-3",
+      {
+        path: "trading/do-not-trade.md",
+        content: "Avoid initiating new positions when breadth is deteriorating and index leadership is narrow.",
+      },
+      undefined,
+      undefined,
+      undefined as never,
+    );
+
+    expect(appendDocument).toHaveBeenCalledWith("trading/do-not-trade.md", "Trading Memory", [
+      "Avoid initiating new positions when breadth is deteriorating and index leadership is narrow.",
+    ]);
+    expect((result.details as { ok: boolean }).ok).toBe(true);
+  });
+
+  it("rejects non-approved trading memory paths", async () => {
+    const { registry } = createRegistry();
+    const tool = registry.createTools(["memory_write_trading_note"], {
+      profileId: "orchestrator",
+      sessionKey: "root",
+      rootUserMessage: "记录一条交易规则。",
+    })[0];
+
+    await expect(
+      tool.execute(
+        "tool-4",
+        {
+          path: "trading/random.md",
           content: "Do not write here.",
         },
         undefined,

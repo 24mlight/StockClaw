@@ -28,6 +28,12 @@ describe("PromptRegistry", () => {
     await expect(registry.composeWorkflowPrompt("session_compaction_summary")).resolves.toContain(
       "Summarize the entire current session",
     );
+    await expect(registry.composeWorkflowPrompt("holding_first_review")).resolves.toContain("Holding-First Review");
+    await expect(registry.composeWorkflowPrompt("candidate_deep_analysis")).resolves.toContain("Candidate Deep Analysis");
+    await expect(registry.composeWorkflowPrompt("midday_action_mode")).resolves.toContain("Midday Action Mode");
+    await expect(registry.composeWorkflowPrompt("eod_attribution")).resolves.toContain("End-of-Day Attribution");
+    await expect(registry.composeWorkflowPrompt("weekly_strategy_review")).resolves.toContain("Weekly Strategy Review");
+    await expect(registry.composeWorkflowPrompt("monthly_strategy_review")).resolves.toContain("Monthly Strategy Review");
   });
 
   it("orders shared and agent prompts by filename", async () => {

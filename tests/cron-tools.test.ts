@@ -179,4 +179,51 @@ describe("cron tool", () => {
       }),
     );
   });
+
+  it("parses structured workflow_turn actions", async () => {
+    const addJob = vi.fn(async (input) => ({ id: "job-4", ...input }));
+    const tool = createCronTools(
+      {
+        cron: {
+          inspect: vi.fn(async () => ({ status: { enabled: true }, jobs: [] })),
+          listJobs: vi.fn(async () => []),
+          addJob,
+          updateJob: vi.fn(),
+          removeJob: vi.fn(),
+          runJob: vi.fn(),
+        } as never,
+      } as never,
+      {
+        sessionKey: "web:review",
+      } as never,
+    )[0];
+
+    await tool.execute(
+      "tool-4",
+      {
+        action: "add",
+        job: {
+          trigger: { kind: "at", at: "2026-03-17T12:30:00.000Z" },
+          action: {
+            kind: "workflow_turn",
+            workflow: "midday_action_mode",
+            message: "Review current holdings and produce the afternoon action plan.",
+          },
+        },
+      },
+      undefined as never,
+      undefined as never,
+      undefined as never,
+    );
+
+    expect(addJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: {
+          kind: "workflow_turn",
+          workflow: "midday_action_mode",
+          message: "Review current holdings and produce the afternoon action plan.",
+        },
+      }),
+    );
+  });
 });

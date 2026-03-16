@@ -4,6 +4,15 @@ import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
 import type { ToolExecutionContext, ToolRegistryDeps } from "./contracts.js";
 import { jsonToolResult, optionalNumber, readObject, readString, requiredString } from "./support.js";
 
+const SUPPORTED_WORKFLOW_TURNS = [
+  "preopen_holding_review",
+  "candidate_deep_analysis",
+  "midday_action_mode",
+  "eod_attribution",
+  "weekly_strategy_review",
+  "monthly_strategy_review",
+] as const;
+
 export function createCronTools(
   deps: ToolRegistryDeps,
   context: ToolExecutionContext,
@@ -154,6 +163,16 @@ function readCronAction(params: Record<string, unknown>) {
     }
     return { kind: "agent_turn" as const, message };
   }
+  if (kind === "workflow_turn") {
+    const workflow = readString(action, "workflow") || readString(params, "workflow");
+    if (!isSupportedWorkflowTurn(workflow)) {
+      throw new Error("workflow_turn action requires a supported workflow.");
+    }
+    if (!message) {
+      throw new Error("workflow_turn action requires message.");
+    }
+    return { kind: "workflow_turn" as const, workflow, message };
+  }
   if (kind === "trade_automation") {
     const symbol =
       readString(action, "symbol") ||
@@ -213,7 +232,7 @@ function readCronAction(params: Record<string, unknown>) {
       rationale,
     };
   }
-  throw new Error("cron action requires kind notify, agent_turn, or trade_automation.");
+  throw new Error("cron action requires kind notify, agent_turn, workflow_turn, or trade_automation.");
 }
 
 function readCronTarget(params: Record<string, unknown>, context: ToolExecutionContext) {
@@ -260,7 +279,13 @@ function looksLikeInlineTrigger(params: Record<string, unknown>): boolean {
 
 function looksLikeInlineAction(params: Record<string, unknown>): boolean {
   const kind = readString(params, "kind") || readString(params, "type");
-  return kind === "notify" || kind === "agent_turn" || kind === "trade_automation";
+  return kind === "notify" || kind === "agent_turn" || kind === "workflow_turn" || kind === "trade_automation";
+}
+
+function isSupportedWorkflowTurn(
+  workflow: string | undefined,
+): workflow is (typeof SUPPORTED_WORKFLOW_TURNS)[number] {
+  return Boolean(workflow && SUPPORTED_WORKFLOW_TURNS.includes(workflow as (typeof SUPPORTED_WORKFLOW_TURNS)[number]));
 }
 
 function looksLikeInlineTarget(params: Record<string, unknown>): boolean {

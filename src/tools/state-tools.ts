@@ -18,6 +18,15 @@ const WRITABLE_MEMORY_PATHS = new Set([
   "knowledge/INVESTMENT-PRINCIPLES.md",
 ]);
 
+const WRITABLE_TRADING_MEMORY_PATHS = new Set([
+  "trading/risk-profile.md",
+  "trading/market-conditions.md",
+  "trading/position-sizing.md",
+  "trading/error-patterns.md",
+  "trading/high-conviction-setups.md",
+  "trading/do-not-trade.md",
+]);
+
 function normalizeMemoryPath(input: string): string {
   return input.replace(/\\/g, "/").replace(/^memory\//, "").trim();
 }
@@ -27,6 +36,16 @@ function ensureWritableMemoryPath(input: string): string {
   if (!WRITABLE_MEMORY_PATHS.has(normalized)) {
     throw new Error(
       `memory_write_markdown only allows ${[...WRITABLE_MEMORY_PATHS].join(", ")}.`,
+    );
+  }
+  return normalized;
+}
+
+function ensureWritableTradingMemoryPath(input: string): string {
+  const normalized = normalizeMemoryPath(input);
+  if (!WRITABLE_TRADING_MEMORY_PATHS.has(normalized)) {
+    throw new Error(
+      `memory_write_trading_note only allows ${[...WRITABLE_TRADING_MEMORY_PATHS].join(", ")}.`,
     );
   }
   return normalized;
@@ -137,6 +156,22 @@ export function createStateTools(
         const entries = readStringArray(params, "entries");
         await deps.memory.appendDocument(`${date}.md`, "Memory Flush", entries);
         return jsonToolResult({ ok: true, date, entries });
+      },
+    },
+    {
+      name: "memory_write_trading_note",
+      label: "Memory Write Trading Note",
+      description:
+        "Append a concise trading-system memory note to an approved long-term trading markdown file.",
+      parameters: Type.Object({
+        path: Type.String(),
+        content: Type.String(),
+      }),
+      execute: async (_toolCallId, params) => {
+        const target = ensureWritableTradingMemoryPath(requiredString(params, "path"));
+        const content = requiredString(params, "content");
+        await deps.memory.appendDocument(target, "Trading Memory", [content]);
+        return jsonToolResult({ ok: true, path: target, content });
       },
     },
     {

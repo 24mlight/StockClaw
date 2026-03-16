@@ -29,6 +29,17 @@ export type CronAction =
       message: string;
     }
   | {
+      kind: "workflow_turn";
+      workflow:
+        | "preopen_holding_review"
+        | "candidate_deep_analysis"
+        | "midday_action_mode"
+        | "eod_attribution"
+        | "weekly_strategy_review"
+        | "monthly_strategy_review";
+      message: string;
+    }
+  | {
       kind: "trade_automation";
       symbol: string;
       side: "buy" | "sell";

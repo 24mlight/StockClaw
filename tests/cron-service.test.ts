@@ -198,6 +198,57 @@ describe("CronService", () => {
     expect(delivered).toEqual(["Scheduled Telegram review complete."]);
   });
 
+  it("runs scheduled workflow turns with explicit automation metadata", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "stock-claw-cron-workflow-turn-"));
+    const sessions = {
+      createSession: vi.fn(async () => undefined),
+      appendAssistantResult: vi.fn(async () => undefined),
+    };
+    const notifier = new CronNotifier(sessions as never);
+    const runner = {
+      run: vi.fn(async () => ({
+        requestId: "cron:req-workflow",
+        sessionId: "web:review",
+        message: "Midday workflow complete.",
+        blocks: [],
+        actions: [],
+      })),
+    };
+    const service = new CronService(
+      new CronStore(path.join(dir, "cron-jobs.json")),
+      notifier,
+      {
+        resolveQuote: async () => resolvedQuote("AAPL.US", 260),
+      } as never,
+      sessions as never,
+      runner,
+      () => new Date("2026-03-17T12:30:00.000Z"),
+    );
+
+    const job = await service.addJob({
+      trigger: { kind: "at", at: "2026-03-17T12:30:00.000Z" },
+      action: {
+        kind: "workflow_turn",
+        workflow: "midday_action_mode",
+        message: "Review current holdings and produce the afternoon plan.",
+      },
+      target: { sessionId: "web:review", channel: "web", userId: "web-user" },
+    });
+
+    const result = await service.runJob(job.id, "manual");
+
+    expect(runner.run).toHaveBeenCalledTimes(1);
+    const runnerCalls = runner.run.mock.calls as unknown as Array<[unknown]>;
+    const request = runnerCalls[0]![0] as {
+      metadata: Record<string, unknown>;
+      message: string;
+    };
+    expect(request.message).toBe("Review current holdings and produce the afternoon plan.");
+    expect(request.metadata.automationMode).toBe("midday_action_mode");
+    expect(request.metadata.cronActionKind).toBe("workflow_turn");
+    expect(result.response?.message).toBe("Midday workflow complete.");
+  });
+
   it("keeps untriggered price jobs enabled and routes triggered agent turns through the runner", async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "stock-claw-cron-price-agent-turn-"));
     const sessions = {

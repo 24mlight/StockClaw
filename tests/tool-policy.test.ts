@@ -48,6 +48,9 @@ function createRegistry() {
           appendDocument: async () => undefined,
           writeDocument: async () => undefined,
         } as never,
+        reviews: {
+          savePreopenDecision: async () => "review-artifacts/preopen/2026-03-17.json",
+        } as never,
         executor: {
           execute: async () => ({}),
         } as never,

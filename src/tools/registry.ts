@@ -15,6 +15,7 @@ import type {
 import { createMemoryTools } from "./memory-tools.js";
 import { createSessionTools } from "./session-tools.js";
 import { createStateTools } from "./state-tools.js";
+import { createReviewTools } from "./review-tools.js";
 import { createWebTools } from "./web-tools.js";
 import { inferMcpCategory } from "./support.js";
 
@@ -55,6 +56,7 @@ export class ToolRegistry {
       ...createSessionTools(this.deps, context, this.sessionController),
       ...createWebTools(this.deps, context),
       ...createStateTools(this.deps, context),
+      ...createReviewTools(this.deps, context),
     ];
     const implementationMap = new Map(business.map((tool) => [tool.name, tool]));
     for (const toolName of allowSet) {

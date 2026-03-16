@@ -53,11 +53,37 @@
       "memory_write_markdown": {
         "description": "Append a concise, LLM-summarized durable bootstrap memory note to an approved markdown path."
       },
+      "memory_write_trading_note": {
+        "description": "Append a concise durable note to an approved long-term trading memory markdown path."
+      },
       "memory_append_daily_log": {
         "description": "Append durable notes to the dated daily memory log."
       },
       "memory_write_portfolio_summary": {
         "description": "Rewrite the portfolio summary markdown from the current portfolio state."
+      }
+    }
+  },
+  "review_artifacts": {
+    "category": "portfolio",
+    "risk": "write",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "review_write_preopen_decision": {
+        "description": "Persist a structured preopen decision bundle for holding actions, capital gate, and optional trade plan."
+      },
+      "review_write_midday_advice": {
+        "description": "Persist a structured midday action advice artifact."
+      },
+      "review_write_portfolio_snapshot": {
+        "description": "Persist a daily portfolio snapshot for later attribution and review."
+      },
+      "review_write_eod_attribution": {
+        "description": "Persist a structured end-of-day attribution report."
+      },
+      "review_write_strategy_review": {
+        "description": "Persist a structured weekly or monthly strategy review artifact."
       }
     }
   },

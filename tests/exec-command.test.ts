@@ -16,6 +16,9 @@ function createDeps() {
     mcpRuntime: { listTools: () => [] } as never,
     portfolio: {} as never,
     memory: {} as never,
+    reviews: {
+      savePreopenDecision: async () => "review-artifacts/preopen/2026-03-17.json",
+    } as never,
     executor: {} as never,
     backtests: {} as never,
     cron: {} as never,

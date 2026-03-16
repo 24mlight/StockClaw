@@ -13,6 +13,8 @@ import type { PortfolioStore } from "../portfolio/store.js";
 import type { PromptRegistry } from "../prompts/registry.js";
 import type { PiRuntime } from "../pi/runtime.js";
 import type { RuntimeEventLogger } from "../runtime-logging/logger.js";
+import { classifyIntent } from "../orchestrator/intents.js";
+import { resolveWorkflowName, type RootWorkflowName } from "../orchestrator/workflows.js";
 import { SessionSpawnService } from "./spawn-service.js";
 import { AgentProfileRegistry } from "../control/agent-profiles.js";
 import { ToolPolicyService } from "../control/tool-policy.js";
@@ -40,6 +42,7 @@ export class ResearchCoordinator {
 
   async runRootTurn(request: UserRequest): Promise<SpecialistResult> {
     const profile = this.profiles.get(ROOT_AGENT_PROFILE_ID);
+    const workflowName = resolveWorkflowName(classifyIntent(request.message), request.metadata);
     await this.runtimeLogger?.info({
       component: "root",
       type: "flow_started",
@@ -48,13 +51,13 @@ export class ResearchCoordinator {
       profileId: profile.id,
       data: {
         flow: "chat",
-        workflow: "general_chat",
+        workflow: workflowName,
       },
     });
     const run = await this.piRuntime.runPersistent({
       sessionKey: request.sessionId,
       systemPrompt: await this.buildSystemPrompt(profile.id),
-      userPrompt: await this.buildRootTask(request.message, request.metadata),
+      userPrompt: await this.buildRootTask(request.message, request.metadata, workflowName),
       customTools: this.policy.createTools(profile.id, {
         sessionKey: request.sessionId,
         profileId: profile.id,
@@ -74,7 +77,7 @@ export class ResearchCoordinator {
       profileId: profile.id,
       data: {
         flow: "chat",
-        workflow: "general_chat",
+        workflow: workflowName,
         toolCallCount: run.toolCalls.length,
       },
     });
@@ -125,16 +128,17 @@ export class ResearchCoordinator {
   private async buildRootTask(
     userMessage: string,
     metadata: Record<string, unknown> = {},
+    workflowName: RootWorkflowName = resolveWorkflowName(classifyIntent(userMessage), metadata),
   ): Promise<string> {
     const baseTask = await this.buildBaseTask(userMessage, metadata);
-    const generalChat = await this.prompts.composeWorkflowPrompt("general_chat");
+    const workflowPrompt = await this.prompts.composeWorkflowPrompt(workflowName);
     const delegationHint = buildDelegationHint(userMessage);
     return [
       baseTask,
       "",
       delegationHint ? `\nDelegation hint:\n${delegationHint}` : "",
       "",
-      generalChat,
+      workflowPrompt,
     ].join("\n");
   }
 

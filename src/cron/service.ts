@@ -329,7 +329,11 @@ export class CronService {
         },
       };
     }
-    if (job.action.kind === "agent_turn" || job.action.kind === "trade_automation") {
+    if (
+      job.action.kind === "agent_turn" ||
+      job.action.kind === "workflow_turn" ||
+      job.action.kind === "trade_automation"
+    ) {
       const threshold = hitAbove ? job.trigger.above : job.trigger.below;
       const direction = hitAbove ? "above" : "below";
       const request = buildCronRequest(job, startedAt, reason, job.action, {
@@ -413,6 +417,13 @@ function normalizeAction(action: CronAction): CronAction {
       message: action.message.trim(),
     };
   }
+  if (action.kind === "workflow_turn") {
+    return {
+      kind: "workflow_turn",
+      workflow: action.workflow,
+      message: action.message.trim(),
+    };
+  }
   if (action.kind === "trade_automation") {
     return {
       kind: "trade_automation",
@@ -463,7 +474,11 @@ function buildCronRequest(
       cronTrigger: structuredClone(job.trigger),
       cronTriggerContext: structuredClone(triggerContext),
       automationMode:
-        action.kind === "trade_automation" ? "trade_automation" : "scheduled_agent_turn",
+        action.kind === "trade_automation"
+          ? "trade_automation"
+          : action.kind === "workflow_turn"
+            ? action.workflow
+            : "scheduled_agent_turn",
     },
   };
 }
@@ -482,6 +497,9 @@ function buildAgentTurnMessageForAction(
   } = {},
 ): string {
   if (action.kind === "agent_turn") {
+    return action.message;
+  }
+  if (action.kind === "workflow_turn") {
     return action.message;
   }
   if (action.kind === "trade_automation") {
@@ -567,6 +585,9 @@ function defaultJobName(trigger: CronTrigger, action: CronAction): string {
   }
   if (action.kind === "agent_turn") {
     return "scheduled agent task";
+  }
+  if (action.kind === "workflow_turn") {
+    return `scheduled ${action.workflow}`;
   }
   return "scheduled notification";
 }

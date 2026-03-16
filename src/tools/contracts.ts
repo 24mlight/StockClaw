@@ -7,6 +7,7 @@ import type { McpRuntime } from "../mcp/runtime.js";
 import type { MemoryService } from "../memory/service.js";
 import type { OpsService } from "../ops/service.js";
 import type { PortfolioStore } from "../portfolio/store.js";
+import type { ReviewArtifactStore } from "../review/artifact-store.js";
 import type { RestartController } from "../restart/controller.js";
 import type { RuntimeEventLogger } from "../runtime-logging/logger.js";
 import type { SessionService } from "../sessions/service.js";
@@ -23,6 +24,7 @@ export type ToolRegistryDeps = {
   mcpRuntime: McpRuntime;
   portfolio: PortfolioStore;
   memory: MemoryService;
+  reviews: ReviewArtifactStore;
   executor: TradeExecutor;
   backtests: BacktestService;
   cron: CronService;

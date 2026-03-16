@@ -23,6 +23,7 @@ import { Orchestrator } from "../orchestrator.js";
 import { OpsService } from "../ops/service.js";
 import { PiRuntime } from "../pi/runtime.js";
 import { PortfolioStore } from "../portfolio/store.js";
+import { ReviewArtifactStore } from "../review/artifact-store.js";
 import { PromptRegistry } from "../prompts/registry.js";
 import { createPromptVariables } from "../prompts/dynamic.js";
 import { RuntimeEventLogger } from "../runtime-logging/logger.js";
@@ -54,6 +55,7 @@ export async function createApplicationRuntime(
   const memory = new MemoryService(env.STOCK_CLAW_MEMORY_ROOT || "memory");
   await ensureBootstrapMemoryFiles(memory);
   const portfolio = new PortfolioStore(env.STOCK_CLAW_PORTFOLIO_PATH || "data/portfolio.json");
+  const reviews = new ReviewArtifactStore(env.STOCK_CLAW_REVIEW_ROOT || "data");
   const sessions = new SessionService(
     new AppSessionStore(env.STOCK_CLAW_APP_SESSION_PATH || "data/app-sessions.json"),
   );
@@ -121,6 +123,7 @@ export async function createApplicationRuntime(
       mcpRuntime,
       portfolio,
       memory,
+      reviews,
       executor,
       backtests,
       cron,

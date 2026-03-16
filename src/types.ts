@@ -265,6 +265,114 @@ export interface TradeDecision {
   riskNotes: string[];
 }
 
+export type HoldingAction = "hold" | "reduce" | "add" | "exit" | "urgent_exit" | "watch";
+
+export interface HoldingActionPlanItem {
+  symbol: string;
+  action: HoldingAction;
+  confidence: number;
+  rationale: string;
+  riskNotes: string[];
+  suggestedPositionChange: string;
+  invalidation: string;
+}
+
+export interface HoldingActionPlan {
+  asOf: string;
+  summary: string;
+  items: HoldingActionPlanItem[];
+}
+
+export interface CapitalAllocationGate {
+  asOf: string;
+  allowNewPositions: boolean;
+  posture: "offensive" | "neutral" | "defensive";
+  maxNewRiskBudget: number | null;
+  rationale: string;
+  constraints: string[];
+}
+
+export interface TradePlanEntry {
+  symbol: string;
+  market: string;
+  action: "buy" | "watch" | "avoid";
+  bucket: string;
+  confidence: number;
+  idealBuy: number | null;
+  secondaryBuy: number | null;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  positionSize: string | null;
+  strategyTags: string[];
+  thesis: string;
+  invalidation: string;
+}
+
+export interface TradePlan {
+  date: string;
+  createdAt: string;
+  blockedSymbols: string[];
+  entries: TradePlanEntry[];
+}
+
+export interface PreopenDecisionBundle {
+  date: string;
+  createdAt: string;
+  capitalAllocationGate: CapitalAllocationGate;
+  holdingActionPlan: HoldingActionPlan;
+  tradePlan: TradePlan | null;
+}
+
+export interface MiddayActionAdvice {
+  date: string;
+  createdAt: string;
+  exposureDirective: "expand" | "hold" | "shrink";
+  holdings: string[];
+  candidates: string[];
+  doNotTrade: string[];
+}
+
+export interface PortfolioDailySnapshot {
+  date: string;
+  capturedAt: string;
+  accountId: string;
+  mode: string;
+  cash: number;
+  equity: number | null;
+  buyingPower: number | null;
+  positions: Position[];
+  openOrders: Array<Record<string, unknown>>;
+}
+
+export interface EodSymbolAttribution {
+  symbol: string;
+  outcome: "positive" | "negative" | "mixed" | "neutral";
+  attribution: string;
+}
+
+export interface EodAttributionReport {
+  date: string;
+  createdAt: string;
+  selection: string;
+  execution: string;
+  sizing: string;
+  discipline: string;
+  lessons: string[];
+  symbolAttributions: EodSymbolAttribution[];
+}
+
+export interface StrategyReviewReport {
+  period: "weekly" | "monthly";
+  periodStart: string;
+  periodEnd: string;
+  createdAt: string;
+  keptRules: string[];
+  droppedRules: string[];
+  favoredConditions: string[];
+  adverseConditions: string[];
+  lessons: string[];
+}
+
 export interface TradeExecutionRequest {
   action: "paper_buy" | "paper_sell";
   symbol: string;
